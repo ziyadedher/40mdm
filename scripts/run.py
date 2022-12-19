@@ -205,3 +205,5 @@ if __name__ == "__main__":
         print(colorama.Fore.LIGHTBLACK_EX, end="")
         text_utils.type_with_delay("Goodbye, adventurer!", delay=10)
         print(colorama.Fore.RESET, end="")
+    except BrokenPipeError:
+        pass
