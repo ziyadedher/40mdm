@@ -3,6 +3,7 @@ from typing import Final, NewType, Optional
 import dataclasses
 import datetime
 import pathlib
+import time
 import urllib.request
 
 import colorama
@@ -33,6 +34,10 @@ User = NewType("User", str)
 class Passcodes:
     active_passcodes: frozenset[str]
     expired_passcodes: frozenset[str]
+
+
+def _wait_for_healthcheck() -> None:
+    time.sleep(1)
 
 
 def _get_passcodes(passcodes_file_path: pathlib.Path) -> Passcodes:
@@ -106,6 +111,8 @@ def _setup_folders(
 
 
 def main() -> None:
+    _wait_for_healthcheck()
+
     assets_folder_path, _, current_logs_folder_path = _setup_folders(ROOT_FOLDER_PATH)
 
     user = _authenticate_user(_get_passcodes(assets_folder_path / "passcodes.txt"))
