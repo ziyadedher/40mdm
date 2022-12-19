@@ -32,9 +32,9 @@ def type_with_delay(
             print()
 
 
-def prompt(*, prompt: str = "What do you do?\n> ") -> str:
+def prompt(prompt: str = "What do you do?") -> str:
     print(colorama.Fore.BLUE, end="")
-    type_with_delay(prompt, final_newline=False)
+    type_with_delay(prompt + "\n> ", final_newline=False)
     inp = input()
     print(colorama.Fore.RESET, end="")
     return str(inp)

@@ -1,11 +1,12 @@
-from typing import Final
+from typing import Final, NewType, Optional
 
+import dataclasses
 import datetime
 import pathlib
-import socket
 import urllib.request
 
 import colorama
+from loguru import logger
 
 from mdm40 import openai_client, text_utils, imgtoansi
 
@@ -20,27 +21,105 @@ TITLE: Final[
     |_/\___/|_| |_| |_|\__,_|_| |_| |_|
 """
 
-IMAGES_FOLDER: pathlib.Path = pathlib.Path(__file__).absolute().parent / "images"
+ROOT_FOLDER_PATH: pathlib.Path = pathlib.Path(__file__).absolute().parent.parent
+ASSETS_FOLDER_NAME: Final[str] = "assets"
+GAME_LOGS_FOLDER_NAME: Final[str] = "logs"
 
 
-def main() -> None:
-    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # s.bind(("localhost", "8888"))
-    # s.accept()
+User = NewType("User", str)
 
+
+@dataclasses.dataclass(frozen=True)
+class Passcodes:
+    active_passcodes: frozenset[str]
+    expired_passcodes: frozenset[str]
+
+
+def _get_passcodes(passcodes_file_path: pathlib.Path) -> Passcodes:
+    active_passcodes: set[str] = set()
+    expired_passcodes: set[str] = set()
+    with open(passcodes_file_path, "r") as passcodes_file:
+        for line in passcodes_file:
+            passcode, raw_expired = line.split()
+            is_expired = bool(int(raw_expired))
+            if is_expired:
+                expired_passcodes.add(passcode)
+            else:
+                active_passcodes.add(passcode)
+    return Passcodes(frozenset(active_passcodes), frozenset(expired_passcodes))
+
+
+def _authenticate_user(passcodes: Passcodes) -> Optional[User]:
+    logger.info(f"Attempting to authenticate user...")
+
+    given_passcode = text_utils.prompt(f"What is your passcode?")
+
+    logger.debug(f"Got a passcode ({given_passcode}) from the user.")
+
+    if given_passcode in passcodes.active_passcodes:
+        user, _ = given_passcode.split("-")
+        text_utils.type_with_delay(
+            f"{colorama.Fore.LIGHTBLACK_EX}Passcode accepted, welcome {user}!{colorama.Fore.RESET}"
+        )
+        logger.info(f"Authenticated user ({user}) with passcode ({given_passcode}).")
+        return User(user)
+    elif given_passcode in passcodes.expired_passcodes:
+        user, _ = given_passcode.split("-")
+        text_utils.type_with_delay(
+            f"{colorama.Fore.LIGHTBLACK_EX}Passcode is valid for {user}, but is expired. This is likely due to abuse. Please reach out to Ziyad if this is a mistake or you want a new passcode."
+        )
+        logger.info(
+            f"Authenticated user ({user}) with passcode ({given_passcode}), but the passcode is expired."
+        )
+        return None
+    else:
+        text_utils.type_with_delay(
+            f"{colorama.Fore.LIGHTBLACK_EX}Invalid passcode! Reach out to Ziyad if this is a mistake."
+        )
+        logger.info(
+            f"Could not authenticate any user with the given passcode ({given_passcode})."
+        )
+        return None
+
+
+def _greet_user(user: User) -> None:
     print(f"{colorama.Fore.RED}{TITLE}{colorama.Fore.RESET}")
     text_utils.type_with_delay(
-        f"{colorama.Fore.RED}Welcome to 40mdm!{colorama.Fore.RESET}"
+        f"{colorama.Fore.RED}Welcome to 40mdm, {user}!{colorama.Fore.RESET}"
     )
     print()
 
-    IMAGES_FOLDER.mkdir(exist_ok=True)
-    current_folder = IMAGES_FOLDER / datetime.datetime.now().isoformat()
-    current_folder.mkdir(exist_ok=False)
 
+def _setup_folders(
+    root_path: pathlib.Path,
+) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
+    assets_folder_path = root_path / ASSETS_FOLDER_NAME
+    assets_folder_path.mkdir(exist_ok=True)
+
+    logs_folder_path = root_path / GAME_LOGS_FOLDER_NAME
+    logs_folder_path.mkdir(exist_ok=True)
+
+    current_logs_folder_path = logs_folder_path / datetime.datetime.now().isoformat()
+    current_logs_folder_path.mkdir(exist_ok=False)
+
+    return assets_folder_path, logs_folder_path, current_logs_folder_path
+
+
+def main() -> None:
+    assets_folder_path, _, current_logs_folder_path = _setup_folders(ROOT_FOLDER_PATH)
+
+    user = _authenticate_user(_get_passcodes(assets_folder_path / "passcodes.txt"))
+    if user is None:
+        exit(0)
+    _greet_user(user)
+
+    logger.debug("Setting up OpenAI client...")
     openai_client.setup_openai_client()
+    logger.debug("Set up OpenAI client successfully.")
 
-    theme = text_utils.prompt(prompt="What would you like your story to be about?\n> ")
+    logger.info(f"Starting the game for user ({user})...")
+
+    theme = text_utils.prompt("What would you like your story to be about?")
     print()
 
     text_utils.type_with_delay(
@@ -75,7 +154,7 @@ def main() -> None:
     new_story = openai_client.complete_text(running_story, max_tokens=128)
     running_story += f"\n{new_story}"
 
-    chat_file_path = current_folder / "chat.txt"
+    chat_file_path = current_logs_folder_path / "chat.txt"
 
     while True:
         num_chapters += 1
@@ -84,18 +163,13 @@ def main() -> None:
             f"{running_story}\nDescribe objectively, in third-person, what the user sees right now:\n",
             max_tokens=128,
         )
-        image_file_path = current_folder / f"{num_chapters:03d}.png"
+        image_file_path = current_logs_folder_path / f"{num_chapters:03d}.png"
         urllib.request.urlretrieve(
             openai_client.generate_image(image_description),
             filename=str(image_file_path),
         )
         image_ansi = imgtoansi.convert(image_file_path)
         print(image_ansi)
-
-        # inventory = openai_client.complete_text(
-        #     f"{running_story}\nList all the items currently in the user's inventory as a bullet point list:\n"
-        # )
-        # print(inventory)
 
         running_story += "\nBased on the story above, briefly describe a few short options the user can take. Format the options as numbered bullet points in short imperative-tense sentences:\n"
         new_options = openai_client.complete_text(running_story)
@@ -128,6 +202,6 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(colorama.Fore.LIGHTBLACK_EX)
+        print(colorama.Fore.LIGHTBLACK_EX, end="")
         text_utils.type_with_delay("Goodbye, adventurer!", delay=10)
-        print(colorama.Fore.RESET)
+        print(colorama.Fore.RESET, end="")
