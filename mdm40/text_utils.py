@@ -15,7 +15,7 @@ def type_with_delay(
         counter += 1
         if c == "\n":
             counter = 0
-        elif counter == 79:
+        elif counter == 95:
             new_string += "\n"
             counter = 0
     string = new_string
