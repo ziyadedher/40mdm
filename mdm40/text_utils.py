@@ -42,4 +42,4 @@ def prompt(prompt: str = "What do you do?") -> str:
         pass
     finally:
         print(colorama.Fore.RESET, end="")
-        return ""
+        exit(0)
