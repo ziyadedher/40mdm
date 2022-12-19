@@ -1,11 +1,15 @@
 [tool.poetry]
-name = "40mdm"
+name = "mdm40"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+colorama = "^0.4.6"
+openai = "^0.25.0"
+loguru = "^0.6.0"
+Pillow = "^9.3.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"
