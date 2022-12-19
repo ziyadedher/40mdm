@@ -37,7 +37,10 @@ class Passcodes:
 
 
 def _wait_for_healthcheck() -> None:
-    time.sleep(1)
+    text_utils.type_with_delay(
+        f"{colorama.Fore.LIGHTBLACK_EX}Getting you all set up! Give us a few seconds...{colorama.Fore.RESET}"
+    )
+    time.sleep(3)
 
 
 def _get_passcodes(passcodes_file_path: pathlib.Path) -> Passcodes:
@@ -71,7 +74,7 @@ def _authenticate_user(passcodes: Passcodes) -> Optional[User]:
     elif given_passcode in passcodes.expired_passcodes:
         user, _ = given_passcode.split("-")
         text_utils.type_with_delay(
-            f"{colorama.Fore.LIGHTBLACK_EX}Passcode is valid for {user}, but is expired. This is likely due to abuse. Please reach out to Ziyad if this is a mistake or you want a new passcode."
+            f"{colorama.Fore.LIGHTBLACK_EX}Passcode is valid for {user}, but is expired. This is likely due to abuse. Please reach out to Ziyad if this is a mistake or you want a new passcode.{colorama.Fore.RESET}"
         )
         logger.info(
             f"Authenticated user ({user}) with passcode ({given_passcode}), but the passcode is expired."
@@ -79,7 +82,7 @@ def _authenticate_user(passcodes: Passcodes) -> Optional[User]:
         return None
     else:
         text_utils.type_with_delay(
-            f"{colorama.Fore.LIGHTBLACK_EX}Invalid passcode! Reach out to Ziyad if this is a mistake."
+            f"{colorama.Fore.LIGHTBLACK_EX}Invalid passcode! Reach out to Ziyad if this is a mistake.{colorama.Fore.RESET}"
         )
         logger.info(
             f"Could not authenticate any user with the given passcode ({given_passcode})."
@@ -124,14 +127,16 @@ def main() -> None:
     openai_client.setup_openai_client()
     logger.debug("Set up OpenAI client successfully.")
 
-    logger.info(f"Starting the game for user ({user})...")
+    logger.info(f"[{user}] Starting the game for user ({user})...")
 
     theme = text_utils.prompt("What would you like your story to be about?")
+    logger.debug(f"[{user}] Gave an initial game prompt ({theme}).")
 
     text_utils.type_with_delay(
         f"{colorama.Fore.LIGHTBLACK_EX}Please wait while we generate your main character and story...{colorama.Fore.RESET}"
     )
     print()
+    logger.debug(f"[{user}] Generating initial story...")
 
     story_theme = openai_client.complete_text(
         f"Vividly describe a theme for an amazing story heavily based and incorporating the following prompt:\n{theme}"
@@ -151,6 +156,8 @@ def main() -> None:
     running_story += "\nWelcome the player and introduce the main character of the story with great enthusiasm, address the player directly in second person:\n"
     welcome = openai_client.complete_text(running_story, max_tokens=128)
     running_story += f"\n{welcome}"
+
+    logger.debug(f"[{user}] Generated initial story successfully.")
     print(colorama.Fore.RED, end="")
     text_utils.type_with_delay(welcome)
     print(colorama.Fore.RESET, end="")
@@ -160,6 +167,7 @@ def main() -> None:
         f"{colorama.Fore.LIGHTBLACK_EX}Please wait while we generate your first chapter...{colorama.Fore.RESET}"
     )
     print()
+    logger.debug(f"[{user}] Generating next scene...")
 
     running_story += "\nBased on the above, describe the intial scene of the story, address the player directly in second person:\n"
     new_story = openai_client.complete_text(running_story, max_tokens=128)
@@ -182,25 +190,30 @@ def main() -> None:
         image_ansi = imgtoansi.convert(image_file_path)
         print(image_ansi)
 
-        running_story += "\nBased on the story above, briefly describe a few short options the user can take. Format the options as numbered bullet points in short imperative-tense sentences:\n"
+        running_story += "\nBased on the story above, briefly describe a 3 short options the user can take. Format the options as numbered bullet points in short imperative-tense sentences:\n"
         new_options = openai_client.complete_text(running_story)
         running_story += f"\n{new_options}"
 
+        logger.debug(f"[{user}] Generated next scene...")
         print(colorama.Fore.RED, end="")
         text_utils.type_with_delay(new_story)
         print(colorama.Fore.RESET, end="")
         print()
 
         print(colorama.Fore.BLUE, end="")
-        text_utils.type_with_delay("Here are some things you could do:")
+        text_utils.type_with_delay(
+            "Here are suggested actions, but you can type whatever you want to do:"
+        )
         text_utils.type_with_delay(new_options)
         print()
         user_action = text_utils.prompt()
+        logger.debug(f"[{user}] User inputted action ({user_action}).")
 
         text_utils.type_with_delay(
             f"{colorama.Fore.LIGHTBLACK_EX}Please wait while we generate the next chapter...{colorama.Fore.RESET}"
         )
         print()
+        logger.debug(f"[{user}] Generating next scene...")
 
         running_story += f"\nThe user takes the following action: {user_action}\n"
 
