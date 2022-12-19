@@ -194,7 +194,7 @@ def main() -> None:
         new_options = openai_client.complete_text(running_story)
         running_story += f"\n{new_options}"
 
-        logger.debug(f"[{user}] Generated next scene...")
+        logger.debug(f"[{user}] Generated next scene.")
         print(colorama.Fore.RED, end="")
         text_utils.type_with_delay(new_story)
         print(colorama.Fore.RESET, end="")
