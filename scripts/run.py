@@ -130,7 +130,7 @@ def main() -> None:
     print()
 
     text_utils.type_with_delay(
-        f"{colorama.Fore.LIGHTBLACK_EX}Please wait while we generate a story for you...{colorama.Fore.RESET}"
+        f"{colorama.Fore.LIGHTBLACK_EX}Please wait while we generate your main character and story...{colorama.Fore.RESET}"
     )
     print()
 
@@ -155,6 +155,11 @@ def main() -> None:
     print(colorama.Fore.RED, end="")
     text_utils.type_with_delay(welcome)
     print(colorama.Fore.RESET, end="")
+    print()
+
+    text_utils.type_with_delay(
+        f"{colorama.Fore.LIGHTBLACK_EX}Please wait while we generate your first chapter...{colorama.Fore.RESET}"
+    )
     print()
 
     running_story += "\nBased on the above, describe the intial scene of the story, address the player directly in second person:\n"
@@ -192,6 +197,11 @@ def main() -> None:
         text_utils.type_with_delay(new_options)
         print()
         user_action = text_utils.prompt()
+
+        text_utils.type_with_delay(
+            f"{colorama.Fore.LIGHTBLACK_EX}Please wait while we generate the next chapter...{colorama.Fore.RESET}"
+        )
+        print()
 
         running_story += f"\nThe user takes the following action: {user_action}\n"
 
