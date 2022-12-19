@@ -37,9 +37,7 @@ def prompt(prompt: str = "What do you do?") -> str:
     type_with_delay(prompt + "\n> ", final_newline=False)
     try:
         inp = input()
-        return str(inp)
     except EOFError:
-        pass
-    finally:
-        print(colorama.Fore.RESET, end="")
         exit(0)
+    print(colorama.Fore.RESET, end="")
+    return str(inp)
