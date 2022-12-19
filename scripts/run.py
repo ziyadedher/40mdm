@@ -127,7 +127,6 @@ def main() -> None:
     logger.info(f"Starting the game for user ({user})...")
 
     theme = text_utils.prompt("What would you like your story to be about?")
-    print()
 
     text_utils.type_with_delay(
         f"{colorama.Fore.LIGHTBLACK_EX}Please wait while we generate your main character and story...{colorama.Fore.RESET}"
