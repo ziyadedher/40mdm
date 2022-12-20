@@ -38,8 +38,7 @@ class Passcodes:
 
 def _wait_for_healthcheck() -> None:
     text_utils.type_with_delay(
-        f"{colorama.Fore.LIGHTBLACK_EX}Getting you all set up! Give us a few seconds...{colorama.Fore.RESET}",
-        delay=0,
+        f"{colorama.Fore.LIGHTBLACK_EX}Getting you all set up! Give us a few seconds...{colorama.Fore.RESET}"
     )
     time.sleep(3)
 
