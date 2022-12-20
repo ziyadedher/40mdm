@@ -2,7 +2,9 @@ from typing import Final, NewType, Optional
 
 import dataclasses
 import datetime
+import os
 import pathlib
+import sys
 import time
 import urllib.request
 
@@ -235,4 +237,6 @@ if __name__ == "__main__":
         text_utils.type_with_delay("Goodbye, adventurer!", delay=10)
         print(colorama.Fore.RESET, end="")
     except BrokenPipeError:
-        exit(0)
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        sys.exit(1)
