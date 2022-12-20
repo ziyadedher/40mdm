@@ -235,4 +235,4 @@ if __name__ == "__main__":
         text_utils.type_with_delay("Goodbye, adventurer!", delay=10)
         print(colorama.Fore.RESET, end="")
     except BrokenPipeError:
-        pass
+        exit(0)
