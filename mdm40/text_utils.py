@@ -25,8 +25,7 @@ def type_with_delay(
     for k, semistring in enumerate(string.split("\n")):
         for i, _ in enumerate(semistring):
             substr = semistring[: i + 1]
-            print("\r" + substr, end="")
-            sys.stdout.flush()
+            print("\r" + substr, end="", flush=True)
             time.sleep(max(0, dist.samples(1)[0] / 1e3))
         if k != string.count("\n") or final_newline:
             print()
@@ -35,9 +34,6 @@ def type_with_delay(
 def prompt(prompt: str = "What do you do?") -> str:
     print(colorama.Fore.BLUE, end="")
     type_with_delay(prompt + "\n> ", final_newline=False)
-    try:
-        inp = input()
-    except EOFError:
-        exit(0)
+    inp = input()
     print(colorama.Fore.RESET, end="")
     return str(inp)
